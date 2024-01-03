@@ -1,10 +1,13 @@
 from collections import UserDict
 from dateutil.parser import parse
 from datetime import datetime
+import pickle
 import random
 import re
 
-ROWS_PER_PAGE = 2
+# If no filename for saving address book data provided 
+FILENAME = "./res/phone_book.dat"
+ROWS_PER_PAGE = 10
 
 class Field:
     def __init__(self, value):
@@ -124,7 +127,7 @@ class AddressBook(UserDict):
     def delete(self, name:str):        
             self.pop(name, None)
     # print AddressBook using pagination
-    def print(self):
+    def print_book(self):
         cnt = 1
         #getting rows_per_page
         for rows in self:
@@ -134,6 +137,25 @@ class AddressBook(UserDict):
             for row in rows:
                 #print rows on the page
                 print(row)
+
+    def save_address_book(self, filename = FILENAME):
+        with open (filename, "wb") as file:
+            pickle.dump(self, file)
+
+    def recover_address_book(self, filename = FILENAME):
+        with open(filename, 'rb') as file:
+            content = pickle.load(file)
+        return content
+
+
+
+
+    def search_by_names(self, names:list):
+        pass
+
+    def find_by_phone(self, phone:str):
+        pass
+
     
     
     def __iter__(self):        
@@ -170,7 +192,7 @@ class Iterable:
 
 # Testing
 if __name__ == '__main__':
- # Створення нової адресної книги
+    # Створення нової адресної книги
     book = AddressBook()
     names = ['Richard', 'Kavin', 'Alice', 'Bob', 'Eva', 'David', 'Sophia', 'Daniel', 'Olivia', 'Michael', 'Emma', 'William']
 
@@ -196,7 +218,7 @@ if __name__ == '__main__':
     book.add_record(jane_record)
 
     # Print all records from book
-    book.print()    
+    book.print_book()    
 
     # Find and edit phone for John record
     john = book.find("John")
@@ -217,7 +239,7 @@ if __name__ == '__main__':
 
     print("-------deleted jane and one phone of john-----")
 
-    book.print() # 1 record John with 1 phone
+    book.print_book() # 1 record John with 1 phone
     print("---------------------------end -----------------")
 
     
@@ -230,8 +252,12 @@ if __name__ == '__main__':
         book.add_record(rec)
 
 
-    book.print()
-
-    
+    print("----------------Before saving:----------------")
+    book.print_book()
+    book.save_address_book()
+    # print("_____After recovery______________")
+    # book = AddressBook()
+    # book = book.recover_address_book()
+    # book.print_book()    
         
         
