@@ -110,10 +110,7 @@ class Record:
         if self.birthday:
             birthday_txt = f"birthday: {self.birthday}, "
         return f"Contact name: {self.name}, {birthday_txt}phones: {'; '.join(p.value for p in self.phones)}"
-
-
-
-
+    
 
 class AddressBook(UserDict):
     def add_record(self, record: Record):
@@ -147,15 +144,20 @@ class AddressBook(UserDict):
             content = pickle.load(file)
         return content
 
+    def search_records(self, text: str) -> dict:
+        search_results = {}
+        for name, record in self.data.items():
+            # Check if the text is a substring of the name
+            if text.lower() in name.lower():
+                search_results[name] = record
+            else:
+                # Check if the text is a substring of any phone number
+                for phone in record.phones:
+                    if text in phone.value:
+                        search_results[name] = record
+                        break  # Stop searching if a match is found in any phone number               
 
-
-
-    def search_by_names(self, names:list):
-        pass
-
-    def find_by_phone(self, phone:str):
-        pass
-
+        return AddressBook(search_results)
     
     
     def __iter__(self):        
@@ -192,6 +194,7 @@ class Iterable:
 
 # Testing
 if __name__ == '__main__':
+    """
     # Створення нової адресної книги
     book = AddressBook()
     names = ['Richard', 'Kavin', 'Alice', 'Bob', 'Eva', 'David', 'Sophia', 'Daniel', 'Olivia', 'Michael', 'Emma', 'William']
@@ -254,10 +257,17 @@ if __name__ == '__main__':
 
     print("----------------Before saving:----------------")
     book.print_book()
-    book.save_address_book()
-    # print("_____After recovery______________")
-    # book = AddressBook()
-    # book = book.recover_address_book()
-    # book.print_book()    
+    book.save_address_book()"""
+    print("_____After recovery______________")
+    book = AddressBook()
+    book = book.recover_address_book()
+    book.print_book()
+    search_results1 = book.search_records("Da") # David, Daniel
+    search_results2 = book.search_records("33") # John, Kavin, Eva, Sophia, Olivia
+    print("Results for searching 'Da': ")
+    search_results1.print_book()
+    print("Results for phone '33':")
+    search_results2.print_book()
+
         
         
