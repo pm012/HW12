@@ -202,7 +202,7 @@ class Bot:
 
     # Decorator implementation
     # handling errors
-    def input_error(self, func):
+    def input_error(func):
         def inner(*args):
             try:
                 return func(*args)
@@ -232,11 +232,11 @@ class Bot:
 
     # Add contact to the data base (command: add)
     @input_error
-    def set_contact(self, commands, phone_book)->str:    
+    def set_contact(self, commands)->str:    
         if commands[1] in self.phone_book:
             raise ValueError(f"Contact with such name ({commands[1]}) already exists. You should use 'change' command to ammend it")
         else:
-            phone_book[commands[1]] = commands[2]
+            self.phone_book[commands[1]] = commands[2]
             return f"Contact {commands[1]} {commands[2]} is added to DBMS"
 
     # Update phone for existing contact by its name (command: change)
@@ -262,7 +262,7 @@ class Bot:
 
 
     # Quit the program ( command: good buy, close, exit)
-    def quit_bot(self, phone_book:AddressBook):
+    def quit_bot(self):
         self.phone_book.save_address_book()
         quit()
 
@@ -294,15 +294,15 @@ class Bot:
             match commands[0]:
                 case 'exit':
                     print("Good bye!")
-                    self.get_handler(commands[0])()
+                    self.get_handler(commands[0])(self)
                 case 'hello':
-                    print(self.get_handler(commands[0])())
+                    print(self.get_handler(commands[0])(self))
                 case 'add' | 'change' | 'phone':
-                    print(self.get_handler(commands[0])(commands))            
+                    print(self.get_handler(commands[0])(self, commands))            
                 case 'show':
                     show_all = " ".join(commands).lower()
                     if show_all == 'show all':
-                        print(self.get_handler(f"{show_all}")())
+                        print(self.get_handler(f"{show_all}")(self))
                     else:
                         print("Incorrect <show all> command. Please, re-enter.")
 
