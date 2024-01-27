@@ -192,82 +192,126 @@ class Iterable:
 
 
 
-# Testing
+class Bot:
+    
+    
+    def __init__(self, file_DB=None):    
+        self.phone_book = AddressBook()    
+        self.phone_book = self.phone_book.recover_address_book()
+        
+
+    # Decorator implementation
+    # handling errors
+    def input_error(self, func):
+        def inner(*args):
+            try:
+                return func(*args)
+            except KeyError as e:
+                if str(e)=='':
+                    return "Provide a usernmae"
+                else:
+                    return f"No contact with name = {str(e)}"
+            except ValueError as e:
+                if str(e)=="Invalid parameters":
+                    return "Unable to update. Incorrect usename. Use add <name> <phone> to add a new user"
+                else:
+                    return str(e)
+            except IndexError as e:
+                if str(e)=='list index out of range':
+                    return "Provide name and phone"
+                else:
+                    return str(e)
+        
+        return inner
+
+    # Handlers
+
+    # Greetings (command: hello)
+    def answer_greeting(self):
+        return "How can I help you?"
+
+    # Add contact to the data base (command: add)
+    @input_error
+    def set_contact(self, commands, phone_book)->str:    
+        if commands[1] in self.phone_book:
+            raise ValueError(f"Contact with such name ({commands[1]}) already exists. You should use 'change' command to ammend it")
+        else:
+            phone_book[commands[1]] = commands[2]
+            return f"Contact {commands[1]} {commands[2]} is added to DBMS"
+
+    # Update phone for existing contact by its name (command: change)
+    @input_error
+    def update_phone(self, commands)->str:    
+        if commands[1] in self.phone_book:
+            self.phone_book[commands[1]]= commands[2]
+            return f"Contact {commands[1]} phone number is changed to {commands[2]}"
+        else:
+            raise ValueError(f"Contact {commands[1]} is not found!")
+
+    # Get contact phone by name (command: phone)
+    @input_error
+    def get_phone(self, commands)->str:
+        return f" The contact {commands[1]} has phone number: {self.phone_book[commands[1]]}"
+
+    # Print all contacts in the data base (command: show all)
+    def display(self):
+        if not self.phone_book:
+            return "No contacts found."
+        else:
+            self.phone_book.print_book()
+
+
+    # Quit the program ( command: good buy, close, exit)
+    def quit_bot(self, phone_book:AddressBook):
+        self.phone_book.save_address_book()
+        quit()
+
+    # Handler function
+    def get_handler(self, command):    
+        return self.COMMANDS[command]   
+    
+    COMMANDS = {
+            'hello': answer_greeting,
+            'add': set_contact,
+            'change': update_phone,
+            'phone' : get_phone,
+            'show all': display,
+            'exit' : quit_bot
+        }
+
+
+
+    def start_bot(self):
+        exit_cmds = ["good bye", "close", "exit"]
+        while True:
+            commands = list()
+            prop = input("Enter a command(hello, add, change, phone, show all, exit or [good bye, close]) from the list above: ")
+            if prop.lower() in exit_cmds:
+                prop = 'exit'
+            commands = prop.split(' ')
+            if len(commands)>0: 
+                commands[0]=commands[0].lower()
+            match commands[0]:
+                case 'exit':
+                    print("Good bye!")
+                    self.get_handler(commands[0])()
+                case 'hello':
+                    print(self.get_handler(commands[0])())
+                case 'add' | 'change' | 'phone':
+                    print(self.get_handler(commands[0])(commands))            
+                case 'show':
+                    show_all = " ".join(commands).lower()
+                    if show_all == 'show all':
+                        print(self.get_handler(f"{show_all}")())
+                    else:
+                        print("Incorrect <show all> command. Please, re-enter.")
+
+                case _:
+                    print("Incorrect command, please provide the command from the list in command prompt")   
+
 if __name__ == '__main__':
-    """
-    # Створення нової адресної книги
-    book = AddressBook()
-    names = ['Richard', 'Kavin', 'Alice', 'Bob', 'Eva', 'David', 'Sophia', 'Daniel', 'Olivia', 'Michael', 'Emma', 'William']
-
-
-    # Create record for John
-    # Will throw ValueError if not required parameter birthday is not valid
-    john_record = Record("John", birthday="12.06.1840")
-    
-    john_record.add_phone("1234567890")
-    john_record.add_phone("5555555555")
-
-    # Print days to birthday
-    print(f"Days to birthday {john_record.days_to_birthday()}")
-    
-    
-
-    # Add John record to address book
-    book.add_record(john_record)
-
-    # Create and add Jane record to address book
-    jane_record = Record("Jane")
-    jane_record.add_phone("9876543210")
-    book.add_record(jane_record)
-
-    # Print all records from book
-    book.print_book()    
-
-    # Find and edit phone for John record
-    john = book.find("John")
-    john.edit_phone("1234567890", "1112223333")
-
-    print(john)  # Output: Contact name: John, phones: 1112223333; 5555555555
-
-    # Find the phone in the  John record
-    found_phone = john.find_phone("5555555555")
-    print(f"{john.name}: {found_phone}")  # expected output: 5555555555
-
-    # Delete Jane record
-    book.delete("Jane")
-    book.delete("Jane")
-
-    #Delete '55555555555' phone from John record
-    john_record.remove_phone('5555555555')
-
-    print("-------deleted jane and one phone of john-----")
-
-    book.print_book() # 1 record John with 1 phone
-    print("---------------------------end -----------------")
-
-    
-    # Generate records for pagination testing
-    for name in names:
-        rec = Record(name)
-        num = random.randint(1, 3)
-        for i in range(num):
-            rec.add_phone(''.join(random.choice('0123456789') for _ in range(10)))
-        book.add_record(rec)
-
-
-    print("----------------Before saving:----------------")
-    book.print_book()
-    book.save_address_book()"""
-    print("_____After recovery______________")
-    book = AddressBook()
-    book = book.recover_address_book()
-    book.print_book()
-    search_results1 = book.search_records("Da") # David, Daniel
-    search_results2 = book.search_records("33") # John, Kavin, Eva, Sophia, Olivia
-    print("Results for searching 'Da': ")
-    search_results1.print_book()
-    print("Results for phone '33':")
-    search_results2.print_book()
+    bot = Bot()
+    bot.start_bot()
 
         
         
