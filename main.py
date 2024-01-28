@@ -229,6 +229,18 @@ class Bot:
     # Greetings (command: hello)
     def answer_greeting(self):
         return "How can I help you?"
+    
+    # Greetings (command: help)
+    def help_info(self):
+        return """Commands list:\n
+        hello - prints greeting \n
+        add <contact name> - adds record \n
+        change <contact name> - changes contact phone by name \n
+        phone <contact phones by name> - get contact phones by name ??? \n
+        show all - prints contact book \n
+        search - filter by name letters or phone number sequence \n
+        exit, good bye, close - saves changes to database and exit \n
+        """
 
     # Add contact to the data base (command: add)
     @input_error
@@ -276,6 +288,7 @@ class Bot:
             'change': update_phone,
             'phone' : get_phone,
             'show all': display,
+            'help': help_info,
             'exit' : quit_bot
         }
 
@@ -285,7 +298,7 @@ class Bot:
         exit_cmds = ["good bye", "close", "exit"]
         while True:
             commands = list()
-            prop = input("Enter a command(hello, add, change, phone, show all, exit or [good bye, close]) from the list above: ")
+            prop = input("Enter a command( or 'help' for list of available commands: ")
             if prop.lower() in exit_cmds:
                 prop = 'exit'
             commands = prop.split(' ')
@@ -296,6 +309,8 @@ class Bot:
                     print("Good bye!")
                     self.get_handler(commands[0])(self)
                 case 'hello':
+                    print(self.get_handler(commands[0])(self))
+                case 'help':
                     print(self.get_handler(commands[0])(self))
                 case 'add' | 'change' | 'phone':
                     print(self.get_handler(commands[0])(self, commands))            
