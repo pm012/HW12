@@ -2,7 +2,6 @@ from collections import UserDict
 from dateutil.parser import parse
 from datetime import datetime
 import pickle
-import random
 import re
 
 # If no filename for saving address book data provided 
@@ -35,8 +34,6 @@ class Field:
     # Validation of fields
     def is_valid(self, value)->bool:
         return bool(value)
-
-
    
 class Birthday(Field):
     def is_valid(self, birthday)->bool:
@@ -47,7 +44,6 @@ class Birthday(Field):
             return True
         except ValueError:
             return False
-
 
 
 class Name(Field):
@@ -99,7 +95,6 @@ class Record:
         for phone_item in self.phones:
             if phone_item.value == phone:
                 return phone_item
-            
         return None    
     
     
@@ -160,8 +155,7 @@ class AddressBook(UserDict):
                         search_results[name] = record
                         break  # Stop searching if a match is found in any phone number               
 
-        return AddressBook(search_results)
-    
+        return AddressBook(search_results)    
     
     def __iter__(self):        
         return Iterable(ROWS_PER_PAGE, self.data)
@@ -191,20 +185,15 @@ class Iterable:
         self.page += 1
         # Here we can return page_records and self.page as a tuple, to use it in print method, but IMHO it's a little bit overhead 
         # And it will make the code less readable
-        return page_records   
-
+        return page_records
 
 
 class Bot:
-    
-    
     def __init__(self, file_DB=None):    
         self.phone_book = AddressBook()    
         self.phone_book = self.phone_book.recover_address_book()
-        
 
-    # Decorator implementation
-    # handling errors
+    # Handling errors (Decorator implementation)
     def input_error(func):
         def inner(*args):
             try:
@@ -223,12 +212,10 @@ class Bot:
                 if str(e)=='list index out of range':
                     return "Provide name and phone"
                 else:
-                    return str(e)
-        
+                    return str(e)        
         return inner
 
     # Handlers
-
     # Greetings (command: hello)
     def answer_greeting(self):
         return "How can I help you?"
@@ -282,9 +269,8 @@ class Bot:
     def get_phone(self, commands)->str:
         if commands[1] not in self.phone_book:
             raise ValueError(f"Contact with such name ({commands[1]}) not present in Address Book.")
-
         return f" The contact {commands[1]} has phone numbers: {[str(phone) for phone in self.phone_book.find(commands[1]).phones]}"
-    # delete phone from contact's phone list
+    # Delete phone from contact's phone list
     @input_error
     def remove(self, commands)->str:
         if commands[1] in self.phone_book:
@@ -309,16 +295,12 @@ class Bot:
         else:
             address_book.print_book()
     
-
-    
-    
     # Print all contacts in the data base (command: show all)
     def display(self):
         if not self.phone_book:
             print("No contacts found.")
         else:
             self.phone_book.print_book()
-
 
     # Quit the program ( command: good buy, close, exit)
     def quit_bot(self):
@@ -340,9 +322,7 @@ class Bot:
             'help': help_info,
             'exit' : quit_bot
         }
-
-
-
+    
     def start_bot(self):
         exit_cmds = ["good bye", "close", "exit"]
         while True:
@@ -366,13 +346,13 @@ class Bot:
                 case 'show':
                     show_all = " ".join(commands).lower()
                     if show_all == 'show all':
-                        print(self.get_handler(f"{show_all}")(self))
+                        self.get_handler(f"{show_all}")(self)
                     else:
                         print("Incorrect <show all> command. Please, re-enter.")
                 case 'delete':
                     print(self.get_handler(commands[0])(self, commands))
                 case 'search':
-                    print(self.get_handler(commands[0])(self, commands))
+                    self.get_handler(commands[0])(self, commands)
                 case _:
                     print("Incorrect command, please provide the command from the list in command prompt")   
 
