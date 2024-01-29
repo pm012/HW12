@@ -29,6 +29,9 @@ class Field:
     def __str__(self):
         return str(self.value)
     
+    def __repr__(self) -> str:
+        return str(self.value)
+    
     # Validation of fields
     def is_valid(self, value)->bool:
         return bool(value)
@@ -234,11 +237,12 @@ class Bot:
     def help_info(self):
         return """Commands list:\n
         hello - prints greeting \n
-        add <contact name> - adds record \n
-        change <contact name> - changes contact phone by name \n
-        phone <contact phones by name> - get contact phones by name ??? \n
+        *add <contact name> <phone number>- adds record if contact name is not present, adds phone if contact name is present and phone number differs from other \n
+        *change <contact name> <old phone> <new phone>- changes contact phone by name \n
+        *delete <contact name>- delete contact or delete <contact name> <phone> - delete specified phone for the contact \n
+        *phone <contact name> - get contact phones by name \n
         show all - prints contact book \n
-        search - filter by name letters or phone number sequence \n
+        *search <substring> - filter by name letters or phone number sequence \n
         exit, good bye, close - saves changes to database and exit \n
         """
 
@@ -246,29 +250,72 @@ class Bot:
     @input_error
     def set_contact(self, commands)->str:    
         if commands[1] in self.phone_book:
-            raise ValueError(f"Contact with such name ({commands[1]}) already exists. You should use 'change' command to ammend it")
+            phonelist = [str(phone) for phone in self.phone_book.find(commands[1]).phones]
+            #TODO check false case   
+            if commands[2] in phonelist:
+                raise ValueError(f"Contact with such name ({commands[1]}) and phone ({commands[2]})already exists.")
+            else:
+                self.phone_book[commands[1]].add_phone(commands[2])
+                return f"Contact's {commands[1]} another phone {commands[2]} is added to DBMS"
         else:
-            self.phone_book[commands[1]] = commands[2]
+            record = Record(commands[1])
+            record.add_phone(commands[2])
+            self.phone_book.add_record(record)            
             return f"Contact {commands[1]} {commands[2]} is added to DBMS"
 
     # Update phone for existing contact by its name (command: change)
     @input_error
     def update_phone(self, commands)->str:    
         if commands[1] in self.phone_book:
-            self.phone_book[commands[1]]= commands[2]
-            return f"Contact {commands[1]} phone number is changed to {commands[2]}"
+            phonelist = [str(phone) for phone in self.phone_book.find(commands[1]).phones]
+            if (commands[2] not in phonelist) and (commands[3] in phonelist):
+                raise ValueError(f"Check command values. Phone {commands[2]} is not found! or phone {commands[3]} is present in contact phones")
+            else:
+                self.phone_book[commands[1]].edit_phone(commands[2], commands[3])
+            
+            return f"Contact {commands[1]} phone number {commands[2]} is changed to {commands[3]}"
         else:
             raise ValueError(f"Contact {commands[1]} is not found!")
 
     # Get contact phone by name (command: phone)
     @input_error
     def get_phone(self, commands)->str:
-        return f" The contact {commands[1]} has phone number: {self.phone_book[commands[1]]}"
+        if commands[1] not in self.phone_book:
+            raise ValueError(f"Contact with such name ({commands[1]}) not present in Address Book.")
 
+        return f" The contact {commands[1]} has phone numbers: {[str(phone) for phone in self.phone_book.find(commands[1]).phones]}"
+    # delete phone from contact's phone list
+    @input_error
+    def remove(self, commands)->str:
+        if commands[1] in self.phone_book:
+            record = self.phone_book.find(commands[1])
+            if len(record.phones) > 1:
+                for phone in record.phones:
+                    if str(phone)==commands[2]:
+                        record.phones.remove(phone)
+            else:
+                raise ValueError("Unable to delete last phone from phone list")
+        else:
+            raise ValueError(f"Contact with such name ({commands[1]}) not present in Address Book.")
+
+        return f" The phone {commands[2]} has been removed from phone numbers of {commands[1]}"
+    
+    # Filter by phone or phone number
+    @input_error
+    def filter_contacts(self, commands)->str:
+        address_book =  self.phone_book.search_records(commands[1])
+        if not address_book:
+            print(f"No contacts found that match criteria {commands[1]}")
+        else:
+            address_book.print_book()
+    
+
+    
+    
     # Print all contacts in the data base (command: show all)
     def display(self):
         if not self.phone_book:
-            return "No contacts found."
+            print("No contacts found.")
         else:
             self.phone_book.print_book()
 
@@ -287,7 +334,9 @@ class Bot:
             'add': set_contact,
             'change': update_phone,
             'phone' : get_phone,
+            'delete' : remove,
             'show all': display,
+            'search': filter_contacts,
             'help': help_info,
             'exit' : quit_bot
         }
@@ -320,7 +369,10 @@ class Bot:
                         print(self.get_handler(f"{show_all}")(self))
                     else:
                         print("Incorrect <show all> command. Please, re-enter.")
-
+                case 'delete':
+                    print(self.get_handler(commands[0])(self, commands))
+                case 'search':
+                    print(self.get_handler(commands[0])(self, commands))
                 case _:
                     print("Incorrect command, please provide the command from the list in command prompt")   
 
